@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for the calculator */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent; /* Disable tap highlight on mobile */
+        }
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+        .calculator-btn {
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .calculator-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+        /* Style for the display to prevent text selection */
+        .calculator-display {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+        /* Making the grid span for the zero and equals button */
+        .col-span-2 {
+            grid-column: span 2;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 flex items-center justify-center min-h-screen">
+
+    <div class="w-full max-w-sm mx-auto bg-gray-800 rounded-2xl shadow-2xl p-6">
+        <!-- Calculator Display -->
+        <div class="bg-gray-700 text-white text-5xl font-bold text-right rounded-lg p-6 mb-6 break-all calculator-display">
+            <span id="display">0</span>
+        </div>
+
+        <!-- Calculator Buttons -->
+        <div class="calculator-grid">
+            <!-- Row 1 -->
+            <button onclick="clearDisplay()" class="calculator-btn text-2xl font-semibold bg-gray-600 text-white rounded-lg h-20 hover:bg-gray-500">AC</button>
+            <button onclick="toggleSign()" class="calculator-btn text-2xl font-semibold bg-gray-600 text-white rounded-lg h-20 hover:bg-gray-500">+/-</button>
+            <button onclick="appendCharacter('%')" class="calculator-btn text-2xl font-semibold bg-gray-600 text-white rounded-lg h-20 hover:bg-gray-500">%</button>
+            <button onclick="appendCharacter('/')" class="calculator-btn text-2xl font-semibold bg-yellow-500 text-white rounded-lg h-20 hover:bg-yellow-400">&divide;</button>
+
+            <!-- Row 2 -->
+            <button onclick="appendCharacter('7')" class="calculator-btn text-2xl font-semibold bg-gray-700 text-white rounded-lg h-20 hover:bg-gray-600">7</button>
+            <button onclick="appendCharacter('8')" class="calculator-btn text-2xl font-semibold bg-gray-700 text-white rounded-lg h-20 hover:bg-gray-600">8</button>
+            <button onclick="appendCharacter('9')" class="calculator-btn text-2xl font-semibold bg-gray-700 text-white rounded-lg h-20 hover:bg-gray-600">9</button>
+            <button onclick="appendCharacter('*')" class="calculator-btn text-2xl font-semibold bg-yellow-500 text-white rounded-lg h-20 hover:bg-yellow-400">&times;</button>
+
+            <!-- Row 3 -->
+            <button onclick="appendCharacter('4')" class="calculator-btn text-2xl font-semibold bg-gray-700 text-white rounded-lg h-20 hover:bg-gray-600">4</button>
+            <button onclick="appendCharacter('5')" class="calculator-btn text-2xl font-semibold bg-gray-700 text-white rounded-lg h-20 hover:bg-gray-600">5</button>
+            <button onclick="appendCharacter('6')" class="calculator-btn text-2xl font-semibold bg-gray-700 text-white rounded-lg h-20 hover:bg-gray-600">6</button>
+            <button onclick="appendCharacter('-')" class="calculator-btn text-2xl font-semibold bg-yellow-500 text-white rounded-lg h-20 hover:bg-yellow-400">-</button>
+
+            <!-- Row 4 -->
+            <button onclick="appendCharacter('1')" class="calculator-btn text-2xl font-semibold bg-gray-700 text-white rounded-lg h-20 hover:bg-gray-600">1</button>
+            <button onclick="appendCharacter('2')" class="calculator-btn text-2xl font-semibold bg-gray-700 text-white rounded-lg h-20 hover:bg-gray-600">2</button>
+            <button onclick="appendCharacter('3')" class="calculator-btn text-2xl font-semibold bg-gray-700 text-white rounded-lg h-20 hover:bg-gray-600">3</button>
+            <button onclick="appendCharacter('+')" class="calculator-btn text-2xl font-semibold bg-yellow-500 text-white rounded-lg h-20 hover:bg-yellow-400">+</button>
+
+            <!-- Row 5 -->
+            <button onclick="appendCharacter('0')" class="calculator-btn text-2xl font-semibold bg-gray-700 text-white rounded-lg h-20 hover:bg-gray-600 col-span-2">0</button>
+            <button onclick="appendCharacter('.')" class="calculator-btn text-2xl font-semibold bg-gray-700 text-white rounded-lg h-20 hover:bg-gray-600">.</button>
+            <button onclick="calculateResult()" class="calculator-btn text-2xl font-semibold bg-yellow-500 text-white rounded-lg h-20 hover:bg-yellow-400">=</button>
+        </div>
+    </div>
+
+    <script>
+        const displayElement = document.getElementById('display');
+        let currentInput = '0';
+        let operator = null;
+        let previousInput = null;
+        let shouldResetDisplay = false;
+
+        // Function to update the display
+        function updateDisplay() {
+            displayElement.textContent = currentInput;
+        }
+
+        // Function to append a character to the input
+        function appendCharacter(char) {
+            if (shouldResetDisplay) {
+                currentInput = '0';
+                shouldResetDisplay = false;
+            }
+
+            // Prevent multiple leading zeros
+            if (currentInput === '0' && char !== '.') {
+                currentInput = char;
+            } else if (char === '.' && currentInput.includes('.')) {
+                return; // Prevent multiple decimal points
+            } else {
+                currentInput += char;
+            }
+            updateDisplay();
+        }
+
+        // Function to clear the display and reset the calculator state
+        function clearDisplay() {
+            currentInput = '0';
+            operator = null;
+            previousInput = null;
+            shouldResetDisplay = false;
+            updateDisplay();
+        }
+        
+        // Function to handle operator logic
+        function handleOperator(nextOperator) {
+            const inputValue = parseFloat(currentInput);
+
+            if (operator && previousInput !== null) {
+                calculateResult();
+            }
+
+            previousInput = inputValue;
+            operator = nextOperator;
+            shouldResetDisplay = true;
+        }
+        
+        // Add event listeners for operators to use handleOperator
+        document.querySelectorAll('.calculator-btn').forEach(button => {
+            const value = button.textContent;
+            if (['+', '-', '×', '÷', '%'].includes(value)) {
+                 button.addEventListener('click', () => {
+                    let op = value;
+                    if(value === '×') op = '*';
+                    if(value === '÷') op = '/';
+                    handleOperator(op);
+                 });
+            }
+        });
+
+
+        // Function to calculate the result
+        function calculateResult() {
+            if (operator === null || previousInput === null || shouldResetDisplay) {
+                return;
+            }
+
+            const currentValue = parseFloat(currentInput);
+            let result = 0;
+
+            // Using a switch statement for calculation based on the operator
+            switch (operator) {
+                case '+':
+                    result = previousInput + currentValue;
+                    break;
+                case '-':
+                    result = previousInput - currentValue;
+                    break;
+                case '*':
+                    result = previousInput * currentValue;
+                    break;
+                case '/':
+                    if (currentValue === 0) {
+                        currentInput = 'Error';
+                        updateDisplay();
+                        // Reset after showing error
+                        setTimeout(clearDisplay, 1500);
+                        return;
+                    }
+                    result = previousInput / currentValue;
+                    break;
+                case '%':
+                    result = previousInput % currentValue;
+                    break;
+            }
+
+            currentInput = result.toString();
+            operator = null;
+            previousInput = null;
+            shouldResetDisplay = true;
+            updateDisplay();
+        }
+
+        // Function to toggle the sign of the current number
+        function toggleSign() {
+            currentInput = (parseFloat(currentInput) * -1).toString();
+            updateDisplay();
+        }
+
+        // Keyboard support for a better user experience
+        document.addEventListener('keydown', (event) => {
+            if (event.key >= 0 && event.key <= 9) {
+                appendCharacter(event.key);
+            } else if (event.key === '.') {
+                appendCharacter('.');
+            } else if (event.key === 'Enter' || event.key === '=') {
+                event.preventDefault(); // Prevent form submission if inside one
+                calculateResult();
+            } else if (event.key === 'Backspace') {
+                currentInput = currentInput.slice(0, -1) || '0';
+                updateDisplay();
+            } else if (event.key === 'Escape') {
+                clearDisplay();
+            } else if (['+', '-', '*', '/'].includes(event.key)) {
+                handleOperator(event.key);
+            }
+        });
+
+    </script>
+</body>
+</html>
